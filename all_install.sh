@@ -1024,7 +1024,7 @@ if [[ $(uname -m) == "aarch64" ]]; then
         exit 0
     fi
     echo "系统架构是：$arch"
-    mosdns_host="https://github.com/IrineSistiana/mosdns/releases/download/v5.3.3/mosdns-linux-$arch.zip"
+    mosdns_host="https://github.com/herozmy/StoreHouse/releases/download/mosdns/mosdns-linux-$arch.zip"
  if [[ "${release}" == "alpine" ]]; then
     apk update || { echo "更新失败！退出脚本"; exit 1; }
     apk add curl wget git tar gawk sed  unzip nano  || { echo "更新失败！退出脚本"; exit 1; }
