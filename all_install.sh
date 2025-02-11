@@ -1,5 +1,5 @@
 #!/bin/bash
-##定义地址
+##test
 rm -rf $0
 script_host=https://raw.githubusercontent.com/herozmy/sing-box-mosdns-fakeip
 tag=main
