@@ -8,6 +8,7 @@ file_host="https://d.herozmy.com"
 #del_sys="rm -rf /root/"
 mkdir -p /tmp/install
 tmpcache=tmp/install
+
 download_dir="/tmp/moddnsui"
 mkdir -p "$download_dir"
 github_fake="https://github.com/herozmy/sing-box-mosdns-fakeip.git"
@@ -451,6 +452,7 @@ fi
 
 # 检测并拉取 UI
 git_ui(){
+ 
     if git clone https://github.com/metacubex/metacubexd.git -b gh-pages /etc/${filename}/ui; then
         echo -e "UI 源码拉取${green_text}成功${reset}。"
     else
