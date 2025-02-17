@@ -56,7 +56,7 @@ check_singbox(){
         echo -e "${green_text}[信息] 核心已安装，请选择是否升级${reset}"
         echo -e "${yellow}1. 升级${reset}"
         echo -e "${yellow}2. 跳过${reset}"
-        read -p "请输入选择 (1/2): " choice
+        read -rp "请输入选择 (1/2): " choice
         case "$choice" in
             1)
                 echo -e "${yellow}开始升级核心...${reset}"
@@ -76,7 +76,7 @@ check_singbox(){
                     # 无法自动判断时让用户选择
                     echo -e "${yellow}无法自动识别核心版本，请手动选择：${reset}"
                     echo -e "1. 官方核心\n2. Puer喵佬核心\n3. 曦灵X核心"
-                    read -p "请输入选择 (1/2/3): " core_choice
+                    read -rp "请输入选择 (1/2/3): " core_choice
                     case "$core_choice" in
                         1) 
                         choose_install_singbox
@@ -419,7 +419,7 @@ install_josn_config(){
             echo -e "${red}配置文件下载失败${reset}"
             exit 1
         fi
-        wget -O /etc/sing-box/p_rule.tar.gz https://github.com/herozmy/StoreHouse/releases/download/rule/p_rule.tar.gz
+        wget -O /etc/sing-box/p_rule.tar.gz https://d.herozmy.com/public/Routing/Config/sing-box/p_rule.tar.gz
         tar --strip-components=1 -zxvf /etc/sing-box/p_rule.tar.gz -C /etc/sing-box/rule
         rm -f /etc/sing-box/p_rule.tar.gz
 ###曦灵X核心配置文件
@@ -658,6 +658,639 @@ check_interfaces() {
     #fi
 }
 
+home_config(){
+cat << EOF > /root/go_home.json
+{
+    "log": {
+        "level": "info",
+        "timestamp": false
+    },
+    "dns": {
+        "servers": [
+            {
+                "tag": "dns_proxy",
+                "address": "tls://8.8.8.8:853",
+                "detour": "proxy",
+                "client_subnet": "2409:891f:e44::1"
+            },
+            {
+                "tag": "dns_direct",
+                "address": "https://223.5.5.5/dns-query",
+                "detour": "direct"
+            },
+            {
+                "tag": "dns_resolver",
+                "address": "223.5.5.5",
+                "detour": "direct"
+            },
+            {
+                "tag": "dns_success",
+                "address": "rcode://success"
+            },
+            {
+                "tag": "dns_refused",
+                "address": "rcode://refused"
+            },
+            {
+                "tag": "block",
+                "address": "rcode://success"
+            },
+            {
+                "tag": "dns_fakeip",
+                "address": "fakeip"
+            }
+        ],
+        "rules": [
+            {
+                "rule_set": "geosite-category-ads-all",
+                "server": "block",
+                "action": "route-options",
+                "disable_cache": true
+            },
+            {
+                "domain_regex": "^-cn-ssl.ls.apple.com",
+                "domain_suffix": [
+                    "${domain}",
+                    "office365.com",
+                    "office.com",
+                    "push-apple.com.akadns.net",
+                    "push.apple.com",
+                    "time.apple.com",
+                    "gs-loc-cn.apple.com",
+                    "iphone-ld.apple.com",
+                    "lcdn-locator.apple.com",
+                    "lcdn-registration.apple.com"
+                ],
+                "domain": [
+                    "gs-loc-cn.apple.com",
+                    "gsp10-ssl-cn.ls.apple.com",
+                    "gsp12-cn.ls.apple.com",
+                    "gsp13-cn.ls.apple.com",
+                    "gsp4-cn.ls.apple.com.edgekey.net.globalredir.akadns.net",
+                    "gsp4-cn.ls.apple.com.edgekey.net",
+                    "gsp4-cn.ls.apple.com",
+                    "gsp5-cn.ls.apple.com",
+                    "gsp85-cn-ssl.ls.apple.com",
+                    "gspe19-2-cn-ssl.ls.apple.com",
+                    "gspe19-cn-ssl.ls.apple.com",
+                    "gspe19-cn.ls-apple.com.akadns.net",
+                    "gspe19-cn.ls.apple.com",
+                    "gspe79-cn-ssl.ls.apple.com",
+                    "cl2-cn.apple.com",
+                    "cl4-cn.apple.com"
+                ],
+                "server": "dns_direct",
+                "disable_cache": true
+            },
+            {
+                "rule_set": "geosite-cn",
+                "query_type": [
+                    "A",
+                    "AAAA"
+                ],
+                "server": "dns_direct"
+            },
+            {
+                "rule_set": "geosite-cn",
+                "query_type": [
+                    "CNAME"
+                ],
+                "server": "dns_direct"
+            },
+            {
+                "rule_set": "geosite-geolocation-!cn",
+                "query_type": [
+                    "A",
+                    "AAAA"
+                ],
+                "server": "dns_fakeip"
+            },
+            {
+                "rule_set": "geosite-geolocation-!cn",
+                "query_type": [
+                    "CNAME"
+                ],
+                "server": "dns_proxy"
+            },
+            {
+                "query_type": [
+                    "A",
+                    "AAAA",
+                    "CNAME"
+                ],
+                "invert": true,
+                "server": "dns_refused",
+                "action": "route-options",
+                "disable_cache": true
+            }
+        ],
+        "final": "dns_proxy",
+        "independent_cache": true,
+        "fakeip": {
+            "enabled": true,
+            "inet4_range": "198.18.0.0/15",
+            "inet6_range": "fc00::/18"
+        }
+    },
+    "route": {
+        "rule_set": [
+            {
+                "tag": "geosite-category-ads-all",
+                "type": "remote",
+                "format": "binary",
+                "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-category-ads-all.srs",
+                "download_detour": "proxy"
+            },
+            {
+                "tag": "geosite-netflix",
+                "type": "remote",
+                "format": "binary",
+                "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/netflix.srs",
+                "download_detour": "proxy"
+            },
+            {
+                "tag": "geosite-cn",
+                "type": "remote",
+                "format": "binary",
+                "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-cn.srs",
+                "download_detour": "proxy"
+            },
+            {
+                "tag": "geosite-geolocation-!cn",
+                "type": "remote",
+                "format": "binary",
+                "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-geolocation-!cn.srs",
+                "download_detour": "proxy"
+            },
+            {
+                "tag": "geoip-cn",
+                "type": "remote",
+                "format": "binary",
+                "url": "https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs",
+                "download_detour": "proxy"
+            }
+        ],
+        "rules": [
+            {
+                "inbound": "tun-in",
+                "action": "sniff"
+            },
+            {
+                "protocol": "dns",
+                "action": "hijack-dns"
+            },
+            {
+                "ip_cidr": [
+                    "${ip_cidr}"
+                ],
+                "outbound": "home"
+            },
+            {
+                "network": "udp",
+                "port": 443,
+                "action": "reject"
+            },
+            {
+                "rule_set": "geosite-category-ads-all",
+                "action": "reject"
+            },
+            {
+                "domain_suffix": [
+                    ".cn"
+                ],
+                "outbound": "direct"
+            },
+            {
+                "domain_suffix": [
+                    "office365.com",
+                    "office.com"
+                ],
+                "outbound": "direct"
+            },
+            {
+                "domain_regex": "^-cn-ssl.ls.apple.com",
+                "domain_suffix": [
+                    "push.apple.com",
+                    "push-apple.com.akadns.net",
+                    "time.apple.com",
+                    "gs-loc-cn.apple.com",
+                    "iphone-ld.apple.com",
+                    "lcdn-locator.apple.com",
+                    "lcdn-registration.apple.com"
+                ],
+                "domain": [
+                    "gs-loc-cn.apple.com",
+                    "gsp10-ssl-cn.ls.apple.com",
+                    "gsp12-cn.ls.apple.com",
+                    "gsp13-cn.ls.apple.com",
+                    "gsp4-cn.ls.apple.com.edgekey.net.globalredir.akadns.net",
+                    "gsp4-cn.ls.apple.com.edgekey.net",
+                    "gsp4-cn.ls.apple.com",
+                    "gsp5-cn.ls.apple.com",
+                    "gsp85-cn-ssl.ls.apple.com",
+                    "gspe19-2-cn-ssl.ls.apple.com",
+                    "gspe19-cn-ssl.ls.apple.com",
+                    "gspe19-cn.ls-apple.com.akadns.net",
+                    "gspe19-cn.ls.apple.com",
+                    "gspe79-cn-ssl.ls.apple.com",
+                    "cl2-cn.apple.com",
+                    "cl4-cn.apple.com"
+                ],
+                "outbound": "direct"
+            },
+            {
+                "rule_set": "geosite-cn",
+                "outbound": "direct"
+            },
+            {
+                "rule_set": "geosite-geolocation-!cn",
+                "outbound": "proxy"
+            },
+            {
+                "rule_set": "geoip-cn",
+                "outbound": "direct"
+            },
+            {
+                "ip_is_private": true,
+                "outbound": "direct"
+            }
+        ],
+        "final": "proxy",
+        "auto_detect_interface": true
+    },
+    "inbounds": [
+        {
+            "type": "tun",
+            "tag": "tun-in",
+            "address": [
+                "172.16.0.1/30",
+                "fd00::1/126"
+            ],
+            "mtu": 1500,
+            "auto_route": true,
+            "strict_route": true,
+            "stack": "system"
+        }
+    ],
+    "outbounds": [
+        {
+            "tag": "proxy",
+            "type": "selector",
+            "outbounds": [
+                "home-hy2",
+                "vless-test"
+            ]
+        },
+        {
+            "tag": "home",
+            "type": "selector",
+            "outbounds": [
+                "home-hy2"
+            ]
+        },
+        {
+            "type": "hysteria2",
+            "server": "${domain}",       
+            "server_port": ${hyport}, 
+            "tag": "home-hy2", 
+            "up_mbps": 50,
+            "down_mbps": 500,
+            "password": "${password}",
+            "tls": {
+            "enabled": true,
+            "server_name": "bing.com",   
+            "insecure": true,
+            "alpn": [
+             "h3"
+               ]
+             }
+           },
+        {
+            "type": "vless",
+            "tag": "vless-test",
+            "uuid": "9b1cxxxx-c886-48e8-xxxx-ed683bf2cced",
+            "packet_encoding": "xudp",
+            "server": "110.110.110.110",
+            "server_port": 54320,
+            "flow": "",
+            "tls": {
+                "enabled": true,
+                "server_name": "test.vless.com",
+                "utls": {
+                    "enabled": true,
+                    "fingerprint": "chrome"
+                },
+                "reality": {
+                    "enabled": true,
+                    "public_key": "hxxxWtU2rWjU9uowFtYE5UgYbvyv8enY5ikdKIRt4kE",
+                    "short_id": "41axxx5e51c6138a"
+                }
+            },
+            "multiplex": {
+                "enabled": true,
+                "protocol": "h2mux",
+                "max_connections": 1,
+                "min_streams": 2,
+                "padding": true,
+                "brutal": {
+                    "enabled": true,
+                    "up_mbps": 200,
+                    "down_mbps": 200
+                }
+            }
+        },
+        {
+            "type": "direct",
+            "tag": "direct"
+        }
+    ],
+    "experimental": {
+        "cache_file": {
+            "enabled": true,
+            "path": "cache.db",
+            "store_fakeip": true,
+            "store_rdrc": true
+        }
+    }
+}
+EOF
+    echo -e "${green}客户端配置生成完成${reset}"
+    echo -e "${yellow}客户端配置生成路径为: /root/go_home.json${reset}"
+    echo -e "${yellow}请自行复制至客户端${reset}"
+
+}
+hy2-gohome(){
+    echo -e "${yellow}是否安装hy2回家配置 y/n${reset}"
+    read -p "请输入选择 (y/n): " hy2_choice
+    case "${hy2_choice}" in
+        y)
+            echo -e "安装hy2回家配置"
+            install_hy2-gohome
+            ;;
+        n)
+            echo -e "不安装hy2回家配置"
+            ;;
+        *)
+            echo -e "无效选择，退出脚本"
+            exit 1
+            ;;
+    esac
+
+}
+
+
+ph_home_config(){
+    echo -e "请输入：mosdns地址 例如：10.10.10.53"
+    read -p "DNS地址: " mosdns_address
+    mosdns_address="${mosdns_address:-10.10.10.53}"
+    echo -e "请输入：家里wifi bssid 例如：e8:9f:80:8b:9c:59 <用于回家直连，请自行获取>"
+    read -p "家里wifi bssid: " wifi_bssid
+    wifi_bssid="${wifi_bssid:-e8:9f:80:8b:9c:59}"
+cat << EOF >  "/root/go_home.json"
+{   
+    "log": {   
+        "level": "error",   
+        "timestamp": true   
+    },   
+    "dns": {   
+        "servers": [   
+            {   
+                "tag": "dnsdirect",    
+                "address": "udp://${mosdns_address}:53", 
+                "detour": "direct"   
+            },  
+            {   
+                "tag": "dnshome",   
+                "address": "udp://${mosdns_address}:53",   
+                "detour": "home"   
+            },  
+            {  
+               "tag": "block",  
+               "address": "rcode://success"  
+            },
+            {  
+                "tag": "nodedns",  
+                "address": "223.5.5.5",  
+                "detour": "direct"  
+            }  
+        ],  
+        "rules": [  
+            {  
+                "outbound": "any",  
+                "server": "nodedns"
+            },
+            { 
+                "query_type": [
+                "HTTPS",
+                "AAAA", 
+                "PTR",
+                "SVCB" 
+                ], 
+                "server": "block", 
+                "disable_cache": true 
+            }, 
+            {   
+                "wifi_bssid": "${wifi_bssid}",    
+                "server": "dnsdirect"   
+            }
+        ],   
+        "independent_cache": true, 
+        "disable_expire": false, 
+        "final": "dnshome"   
+    },  
+    "route": {   
+        "rules": [   
+            {  
+                "protocol": "dns",  
+                "action": "hijack-dns"
+            },    
+            {   
+                "wifi_bssid": "${wifi_bssid}",    
+                "outbound": "direct"   
+            }, 
+            {  
+            "ip_cidr": [ 
+                "${ip_cidr}", 
+                "192.168.1.0/24",
+                "28.0.0.1/8", 
+                "74.125.39.0/24", 
+                "216.239.36.0/24",  
+                 "91.108.56.0/22",  
+                 "91.108.4.0/22",  
+                 "91.108.8.0/22",  
+                 "91.108.16.0/22",  
+                 "91.108.12.0/22",  
+                 "149.154.160.0/20",  
+                 "91.105.192.0/23",  
+                 "91.108.20.0/22", 
+                 "95.161.64.0/20",  
+                 "185.76.151.0/24", 
+                 "120.131.0.0/16", 
+                 "111.202.0.0/16", 
+                 "58.254.0.0/16", 
+                 "120.92.0.0/16"  
+               ],  
+                "outbound": "home"  
+            } 
+        ],   
+        "final": "direct",   
+        "auto_detect_interface": true   
+    },  
+    "inbounds": [   
+        {  
+            "type": "tun",  
+            "tag": "tun-in",  
+            "address": "172.16.0.1/30", 
+            "mtu": 9000,  
+            "auto_route": true,  
+            "strict_route": true,  
+            "stack": "system",  
+            "sniff": true,  
+            "sniff_override_destination": false  
+        }   
+    ],   
+    "outbounds": [   
+        { 
+         "type": "hysteria2", 
+         "server": "xxx.top", 
+         "server_port": 33445, 
+         "tag": "home",
+         "tcp_fast_open": true, 
+         "up_mbps": 100, 
+         "down_mbps": 100, 
+         "password": "12345678", 
+         "tls": { 
+         "enabled": true, 
+         "server_name": "bing.com", 
+         "insecure": true, 
+         "alpn": [ 
+          "h3" 
+            ] 
+          } 
+        }, 
+        {   
+            "type": "direct",   
+            "tag": "direct"   
+        }
+    ],   
+    "experimental": {   
+        "cache_file": {   
+            "enabled": true,   
+            "path": "cache.db"   
+        }   
+    }   
+}
+EOF
+    echo -e "${green}客户端配置生成完成${reset}"
+    echo -e "${yellow}客户端配置生成路径为: /root/go_home.json${reset}"
+    echo -e "${yellow}请自行复制至客户端${reset}"
+
+}
+
+
+
+install_hy2-gohome(){
+    echo -e "hysteria2 回家 自签证书"
+    echo -e "开始创建证书存放目录"
+    mkdir -p /root/hysteria 
+    echo -e "自签bing.com证书100年"
+    openssl ecparam -genkey -name prime256v1 -out /root/hysteria/private.key && openssl req -new -x509 -days 36500 -key /root/hysteria/private.key -out /root/hysteria/cert.pem -subj "/CN=bing.com"
+    while true; do
+        # 提示用户输入域名
+        read -p "请输入家庭DDNS域名: " domain
+        # 检查域名格式是否正确
+        if [[ $domain =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+            break
+        else
+            echo "域名格式不正确，请重新输入"
+        fi
+    done  
+    # 输入端口号
+    while true; do
+        read -p "请输入hy2协议端口号: " hyport
+
+        # 检查端口号是否为数字
+        if [[ $hyport =~ ^[0-9]+$ ]]; then
+            break
+        else
+            echo "端口号格式不正确，请重新输入"
+        fi
+    done
+    read -p "请输入密码: " password
+    echo "您输入的域名是: $domain"
+    echo "您输入的端口号是: $hyport"
+    echo "您输入的密码是: $password"
+    read -p "内网段: " ip_cidr
+    ip_cidr="${ip_cidr:-10.10.10.0/24}"
+    echo "您输入的内网段是: $ip_cidr"
+    sleep 2
+    echo "开始生成配置文件"
+    # 检查sb配置文件是否存在
+    config_file="/etc/sing-box/config.json"
+    if [ ! -f "$config_file" ]; then
+        echo "错误：配置文件 $config_file 不存在"
+        echo "请配置singbox或者Puer喵佬核或者X核的singbox config.json脚本"
+        
+        exit 1
+    fi   
+    hy_config='{
+      "type": "hysteria2",
+      "tag": "hy2-in",
+      "listen": "::",
+      "listen_port": '"${hyport}"',
+      "sniff": true,
+      "sniff_override_destination": false,
+      "sniff_timeout": "100ms",
+      "users": [
+        {
+          "password": "'"${password}"'"
+        }
+      ],
+      "ignore_client_bandwidth": true,
+      "tls": {
+        "enabled": true,
+        "alpn": [
+          "h3"
+        ],
+        "certificate_path": "/root/hysteria/cert.pem",
+        "key_path": "/root/hysteria/private.key"
+      }
+    },
+'
+line_num=$(grep -n 'inbounds' /etc/sing-box/config.json | cut -d ":" -f 1)
+# 如果找到了行号，则在其后面插入 JSON 字符串，否则不进行任何操作
+if [ ! -z "$line_num" ]; then
+    # 将文件分成两部分，然后在中间插入新的 JSON 字符串
+    head -n "$line_num" /etc/sing-box/config.json > tmpfile
+    echo "$hy_config" >> tmpfile
+    tail -n +$(($line_num + 1)) /etc/sing-box/config.json >> tmpfile
+    mv tmpfile /etc/sing-box/config.json
+fi
+    echo "HY2回家配置写入完成"
+    echo "开始重启sing-box"
+    systemctl restart sing-box
+    echo "开始生成sing-box回家-手机配置"
+    echo -e "请选择生成sing-box回家-客户端配置"
+    echo -e "${yellow}1. 全回家分流 <PH佬规则>${reset}"
+    echo -e "${yellow}2. 客户端规则分流 <O佬规则> 注意：需自行添加飞机节点${reset}"
+    read -p "请输入选择 (1/2/0): " hy2_config
+    case "${hy2_config}" in
+    1)
+        echo "开始生成sing-box回家-全回家分流 <PH佬规则>"
+        ph_home_config
+        ;;
+    2)
+        echo "开始生成sing-box回家-规则分流 <O佬规则> 注意：需自行添加飞机节点"
+        home_config
+        ;;
+    *)
+        echo -e "无效选择，退出脚本"
+        exit 1
+        ;;
+    esac
+
+}
+
 install_over() {
     echo -e "${green_text}启用相关服务${reset}"
     systemctl enable --now ${core_service} 
@@ -704,6 +1337,8 @@ choose_singbox(){
             install_josn_config
             install_core_service
             install_singbox_tproxy
+            hy2-gohome
+            install_over
             ;;
         2)
             echo -e "当前选择: ${green_text} Sing-BOX ${reset}Puer喵佬核心"
@@ -712,6 +1347,8 @@ choose_singbox(){
             install_josn_config
             install_core_service
             install_singbox_tproxy
+            hy2-gohome
+            install_over
             ;;
         3)
             echo -e "当前选择: ${green_text}Sing-BOX${reset}曦灵X核心"
@@ -719,7 +1356,9 @@ choose_singbox(){
             check_enter
             install_josn_config
             install_core_service
-            install_singbox_tproxy
+            install_singbox_tproxy  
+            hy2-gohome
+            install_over
             ;;
         4)
             echo -e "当前选择: ${green_text}Mihomo${reset}核心"
@@ -728,6 +1367,7 @@ choose_singbox(){
             install_josn_config
             install_core_service
             install_singbox_tproxy
+            install_over
             ;;
         0)
             main
@@ -879,4 +1519,5 @@ uninstall_all(){
     done
     echo "卸载完成"
 }
+
 main
