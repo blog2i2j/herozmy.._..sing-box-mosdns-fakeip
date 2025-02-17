@@ -545,7 +545,7 @@ echo "" > "/etc/nftables.conf"
 cat <<EOF > "/etc/nftables.conf"
 #!/usr/sbin/nft -f
 flush ruleset
-table inet $selected_option {
+table inet $core_service {
   set local_ipv4 {
     type ipv4_addr
     flags interval
@@ -576,7 +576,7 @@ table inet $selected_option {
     }
   }
 
-  chain ${selected_option}-tproxy {
+  chain ${core_service}-tproxy {
     fib daddr type { unspec, local, anycast, multicast } return
     ip daddr @local_ipv4 return
     ip6 daddr @local_ipv6 return
@@ -584,7 +584,7 @@ table inet $selected_option {
     meta l4proto { tcp, udp } meta mark set 1 tproxy to :7896 accept
   }
 
-  chain ${selected_option}-mark {
+  chain ${core_service}-mark {
     fib daddr type { unspec, local, anycast, multicast } return
     ip daddr @local_ipv4 return
     ip6 daddr @local_ipv6 return
@@ -594,12 +594,12 @@ table inet $selected_option {
 
   chain mangle-output {
     type route hook output priority mangle; policy accept;
-    meta l4proto { tcp, udp } skgid != 1 ct direction original goto ${selected_option}-mark
+    meta l4proto { tcp, udp } skgid != 1 ct direction original goto ${core_service}-mark
   }
 
   chain mangle-prerouting {
     type filter hook prerouting priority mangle; policy accept;
-    iifname { wg0, lo, $interface_name } meta l4proto { tcp, udp } ct direction original goto ${selected_option}-tproxy
+    iifname { wg0, lo, $interface_name } meta l4proto { tcp, udp } ct direction original goto ${core_service}-tproxy
   }
 }
 EOF
