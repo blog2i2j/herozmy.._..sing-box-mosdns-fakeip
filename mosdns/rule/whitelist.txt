@@ -1,5 +1,4 @@
 domain:apple.cn
-domain:apple.cn
 domain:push-apple.com.akadns.net
 domain:push.apple.com
 domain:iphone-ld.apple.com
